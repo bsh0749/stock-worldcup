@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>피지컬 AI 반려주식 16강 월드컵</title>
+<style>
+  :root{
+    --paper:#F4F6F7; --ink:#182430; --ink-soft:#5B6B7A; --line:#D9DFE4;
+    --up:#E0432F; --up-deep:#B32E1F; --card:#FFFFFF; --gold:#C9A227;
+    --brain:#3B5BD9; --body:#1E9E6A; --integ:#B4650F;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{font-family:'Apple SD Gothic Neo','Pretendard','Noto Sans KR','Malgun Gothic',sans-serif;
+    background:var(--paper);color:var(--ink);line-height:1.5}
+  .wrap{max-width:560px;margin:0 auto;padding:28px 18px 40px;min-height:100%;display:flex;flex-direction:column}
+  .wrap.pad-dock{padding-bottom:150px}
+
+  .eyebrow{font-size:12px;letter-spacing:.18em;font-weight:700;color:var(--up);margin-bottom:10px}
+  h1{font-size:25px;font-weight:800;letter-spacing:-.02em;line-height:1.32}
+  .sub{color:var(--ink-soft);font-size:14px;margin-top:8px;word-break:keep-all}
+  .btn{display:block;width:100%;border:0;cursor:pointer;background:var(--ink);color:#fff;
+    font-size:16px;font-weight:700;padding:16px;border-radius:14px;font-family:inherit;transition:transform .08s ease}
+  .btn:active{transform:scale(.985)}
+  .btn:disabled{background:#B9C2CA;cursor:not-allowed}
+  .btn.ghost{background:transparent;color:var(--ink-soft);font-weight:600;font-size:14px;padding:12px;border:1.5px solid var(--line)}
+  .btn:focus-visible,.chip:focus-visible,.stock-card:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--up);outline-offset:2px}
+  .hidden{display:none!important}
+
+  /* ---------- 인트로 ---------- */
+  .scenario{background:var(--card);border:1.5px solid var(--line);border-radius:18px;
+    padding:24px 20px;margin-top:22px;font-size:15px;word-break:keep-all;line-height:1.75}
+  .scenario .date{font-size:12px;letter-spacing:.14em;font-weight:800;color:var(--ink-soft);margin-bottom:10px}
+  .scenario .quote{margin:14px 0;padding:14px 16px;background:var(--paper);border-left:3px solid var(--up);
+    border-radius:0 10px 10px 0;font-weight:700}
+  .scenario .num{color:var(--up);font-weight:800}
+  .id-form{margin-top:22px;display:flex;gap:10px}
+  .field{flex:1;position:relative}
+  .field label{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
+  .field input{width:100%;padding:14px;border:1.5px solid var(--line);border-radius:12px;
+    font-size:15px;font-family:inherit;background:var(--card);color:var(--ink)}
+  .field input:focus{border-color:var(--ink)}
+  .field.gi{flex:0 0 108px}
+  .field.gi .suffix{position:absolute;right:14px;bottom:14px;font-size:14px;color:var(--ink-soft);font-weight:700}
+  .field.gi input{padding-right:34px}
+  #introStart{margin-top:18px}
+
+  /* ---------- 로드맵 카드 ---------- */
+  .roadmap{background:#1B2431;color:#fff;border-radius:18px;padding:22px 20px;margin-top:18px;word-break:keep-all}
+  .roadmap h3{font-size:13px;letter-spacing:.14em;font-weight:800;color:#9FB0BD;margin-bottom:14px}
+  .rm-row{display:flex;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.1)}
+  .rm-row:first-of-type{border-top:0}
+  .rm-week{flex:0 0 auto;font-size:12px;font-weight:800;color:var(--up);width:78px}
+  .rm-desc{font-size:13.5px;line-height:1.5}
+  .rm-quote{margin-top:16px;padding-top:14px;border-top:1px dashed rgba(255,255,255,.2);
+    font-size:12.5px;color:#B8C4CD;line-height:1.6}
+
+  /* ---------- 예선(선택) ---------- */
+  .quali-head{background:var(--card);border:1.5px solid var(--line);border-radius:16px;
+    padding:18px;margin-top:18px;font-size:14px;word-break:keep-all;line-height:1.7}
+  .quali-head b{color:var(--up)}
+  .pillar{margin-top:26px}
+  .pillar-head{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+  .pillar-head h2{font-size:17px;font-weight:800}
+  .pillar-head .en{font-size:11px;letter-spacing:.14em;font-weight:700}
+  .pillar-desc{font-size:12px;color:var(--ink-soft);margin-bottom:12px}
+  .pillar.brain .en{color:var(--brain)} .pillar.body .en{color:var(--body)} .pillar.integ .en{color:var(--integ)}
+  .pillar.brain h2{border-bottom:3px solid var(--brain)}
+  .pillar.body h2{border-bottom:3px solid var(--body)}
+  .pillar.integ h2{border-bottom:3px solid var(--integ)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{border:1.5px solid var(--line);background:var(--card);border-radius:99px;
+    padding:8px 13px;font-size:13px;font-weight:600;font-family:inherit;color:var(--ink);
+    cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+    transition:border-color .12s ease,background .12s ease,transform .08s ease}
+  .chip .cc{font-size:10px;font-weight:700;color:#9AA7B1}
+  .chip .xtra{font-size:9px;font-weight:800;padding:2px 6px;border-radius:99px;background:var(--paper);color:var(--ink-soft)}
+  .chip:active{transform:scale(.96)}
+  .chip.on{border-color:var(--up);background:#FDEEEB;color:var(--up-deep)}
+  .chip.on .cc{color:var(--up)}
+  .chip:disabled{opacity:.4;cursor:not-allowed}
+
+  .dock{position:fixed;left:0;right:0;bottom:0;z-index:10;
+    background:linear-gradient(to top,var(--paper) 78%,rgba(244,246,247,0));padding:16px 18px 20px}
+  .dock-inner{max-width:560px;margin:0 auto}
+  .dock-pillars{display:flex;justify-content:center;gap:14px;font-size:12px;font-weight:700;margin-bottom:8px;color:var(--ink-soft)}
+  .dock-pillars .ok{color:var(--body)}
+  .dock-pillars .no{color:var(--up)}
+  .dock-row{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+  .dock-count{flex:0 0 auto;background:var(--card);border:1.5px solid var(--line);border-radius:12px;
+    padding:12px 16px;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums}
+  .dock-count b{color:var(--up)}
+  .dock .btn{flex:1;padding:14px}
+  .dock-links{display:flex;justify-content:center;gap:18px}
+  .dock-links button{border:0;background:none;font-family:inherit;font-size:12px;color:var(--ink-soft);cursor:pointer;font-weight:600;padding:4px}
+
+  /* ---------- 대결 ---------- */
+  .match-head{text-align:center;margin-bottom:6px}
+  .round-name{font-size:20px;font-weight:800}
+  .round-name em{font-style:normal;color:var(--up)}
+  .match-count{font-size:13px;color:var(--ink-soft);margin-top:2px;font-variant-numeric:tabular-nums}
+  .restart-link{display:block;margin:8px auto 0;border:0;background:none;color:#B9C2CA;
+    font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;padding:4px;
+    text-decoration:underline;text-underline-offset:3px}
+  .restart-link:active{opacity:.6}
+  .progress{height:5px;background:var(--line);border-radius:99px;margin:16px 0 18px;overflow:hidden}
+  .progress i{display:block;height:100%;background:var(--up);border-radius:99px;transition:width .35s ease}
+
+  .reflect-box{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:16px}
+  .reflect-box .rwho{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--up);margin-bottom:5px}
+  .reflect-box .rq{font-size:14px;font-weight:700;word-break:keep-all;line-height:1.5;color:var(--ink)}
+  .reflect-box .rsub{font-size:12px;color:var(--ink-soft);margin-top:4px;word-break:keep-all}
+  .reflect-box .rcrit{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);
+    font-size:12.5px;color:var(--ink-soft);word-break:keep-all}
+  .reflect-box .rcrit span{font-weight:700;color:var(--ink-soft)}
+  .reflect-box .rcrit b{color:var(--ink);font-weight:700}
+
+
+  .arena{flex:1;display:flex;flex-direction:column;justify-content:center}
+  .stock-card{background:var(--card);border:2px solid var(--line);border-radius:18px;
+    padding:22px 18px;text-align:center;cursor:pointer;width:100%;font-family:inherit;color:var(--ink);
+    transition:transform .1s ease,border-color .15s ease,box-shadow .15s ease;animation:rise .3s ease both}
+  .stock-card:nth-of-type(2){animation-delay:.06s}
+  .stock-card .name{font-size:21px;font-weight:800;word-break:keep-all;display:block}
+  .meta{display:flex;justify-content:center;flex-wrap:wrap;gap:5px;margin-top:8px}
+  .tag{font-size:11px;font-weight:700;display:inline-block;padding:3px 10px;border-radius:99px}
+  .tag.brain{background:#E8EDFB;color:var(--brain)}
+  .tag.body{background:#E4F5EE;color:var(--body)}
+  .tag.integ{background:#F7EDDF;color:var(--integ)}
+  .tag.nation{background:var(--paper);color:var(--ink-soft)}
+  .stock-card:active{transform:scale(.98)}
+  .stock-card.win{border-color:var(--up);box-shadow:0 0 0 3px rgba(224,67,47,.15)}
+  .stock-card.lose{opacity:.45}
+  @media(hover:hover){.stock-card:hover{border-color:var(--ink)}}
+  .vs{text-align:center;margin:10px 0;font-size:15px;font-weight:900;color:var(--up);letter-spacing:.2em}
+  .arena-q{text-align:center;font-size:13px;color:var(--ink-soft);margin-top:18px;word-break:keep-all}
+
+  .why{margin-top:18px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;
+    padding:16px;animation:rise .25s ease both}
+  .why label{display:block;font-size:14px;font-weight:800;margin-bottom:8px;word-break:keep-all}
+  .why label b{color:var(--up)}
+  .why textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;background:var(--paper);
+    padding:12px;font-size:15px;font-family:inherit;resize:none;height:68px;color:var(--ink)}
+  .why textarea:focus{border-color:var(--ink);background:var(--card)}
+  .why .hintline{font-size:11px;color:#AEB9C2;margin-top:6px}
+  .why .btn{margin-top:10px;padding:13px}
+  .why .champ-copy{font-size:13px;color:var(--ink-soft);margin-bottom:10px;word-break:keep-all;line-height:1.6}
+  .why .wq{font-size:14.5px;font-weight:700;color:var(--ink);word-break:keep-all;line-height:1.5;margin-bottom:10px}
+  .why .prompt-btn{display:block;width:100%;border:1.5px solid #E8C9A0;background:#FFF8F0;color:var(--integ);
+    font-family:inherit;font-size:12.5px;font-weight:700;padding:10px;border-radius:10px;cursor:pointer;margin-bottom:10px}
+  .why .prompt-btn:active{transform:scale(.98)}
+  .undo-link{display:block;width:100%;border:0;background:none;color:var(--ink-soft);
+    font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;padding:8px;margin-top:4px;
+    text-decoration:underline;text-underline-offset:3px}
+  .undo-link:active{opacity:.6}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  /* ---------- 라운드 요약 ---------- */
+  .sum-card{background:var(--card);border:2px solid var(--ink);border-radius:20px;
+    padding:24px 20px;margin-top:20px;animation:rise .35s ease both}
+  .sum-card .player-line{font-size:12px;font-weight:700;color:var(--ink-soft);text-align:center}
+  .sum-title{font-size:22px;font-weight:900;text-align:center;margin-top:6px}
+  .sum-title em{font-style:normal;color:var(--up)}
+  .sum-sub{font-size:12px;color:var(--ink-soft);text-align:center;margin-top:2px}
+  .sum-list{margin-top:16px}
+  .sum-item{border-top:1px dashed var(--line);padding:10px 2px}
+  .sum-item:first-child{border-top:0}
+  .sum-item .line{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:14px}
+  .sum-item .w{font-weight:800;color:var(--up)}
+  .sum-item .l{color:var(--ink-soft);font-size:13px;text-decoration:line-through}
+  .sum-item .r{font-size:12.5px;color:var(--ink-soft);margin-top:3px;word-break:keep-all}
+  .sum-item .r::before{content:"— "}
+  .stamp{margin-top:16px;font-size:11px;color:#AEB9C2;letter-spacing:.08em;text-align:center}
+  .save-tip{text-align:center;font-size:13px;color:var(--ink-soft);margin-top:16px}
+  .save-tip b{color:var(--up)}
+  #sumNext{margin-top:16px}
+
+  /* ---------- 결과 ---------- */
+  .actions{margin-top:20px;display:flex;flex-direction:column;gap:8px}
+  .result-card{background:var(--card);border:2px solid var(--ink);border-radius:20px;
+    padding:28px 24px;text-align:center;margin-top:22px;animation:rise .4s ease both}
+  .player-line{font-size:13px;font-weight:700;color:var(--ink-soft)}
+  .medal{font-size:34px;margin-top:10px}
+  .champ-label{font-size:12px;letter-spacing:.22em;font-weight:800;color:var(--gold);margin-top:8px}
+  .champ-name{font-size:30px;font-weight:900;margin-top:6px;word-break:keep-all}
+  .champ-reason{margin-top:16px;padding:14px;background:var(--paper);border-radius:12px;font-size:14px;word-break:keep-all}
+  .champ-reason::before{content:"\201C  ";color:var(--up);font-weight:800}
+  .champ-reason::after{content:"  \201D";color:var(--up);font-weight:800}
+  .journey{margin-top:20px;border-top:1px dashed var(--line);padding-top:14px;text-align:left}
+  .journey h4{font-size:11px;letter-spacing:.18em;color:var(--ink-soft);font-weight:800;margin-bottom:8px}
+  .j-row{font-size:13px;padding:3px 0;word-break:keep-all;line-height:1.55}
+  .j-row .jr{font-weight:800;color:var(--up)}
+  .j-row .jo{font-weight:700}
+  .podium{margin-top:20px;border-top:1px dashed var(--line);padding-top:16px;font-size:13px;color:var(--ink-soft);text-align:left}
+  .podium .row{display:flex;justify-content:space-between;gap:12px;padding:4px 0}
+  .podium .row b{color:var(--ink);font-weight:700;text-align:right;word-break:keep-all}
+
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrapEl">
+
+  <!-- ⓪ 인트로 -->
+  <section id="intro">
+    <div class="eyebrow">피지컬 AI 반려주식 월드컵</div>
+    <h1>단 하나의 회사에만<br>응답할 수 있습니다</h1>
+    <div class="scenario">
+      <div class="date">2026년, 7월</div>
+      <p>여러분에게 <span class="num" id="companyCount"></span>개의 회사가 제안해 왔습니다.</p>
+      <p class="quote">"이제는 피지컬 AI 시대입니다.<br>저의 주주가 되어주시지 않겠습니까?"</p>
+      <p>그런데 문제는, 이 중 <b>딱 1개 회사의 제안에만</b> 응답할 수 있다는 것입니다. 어느 회사를 선택할지 고민하던 여러분은 <b>반려주식 월드컵</b>을 열기로 결정합니다.</p>
+    </div>
+
+    <div class="roadmap">
+      <h3>4주 여정 안내</h3>
+      <div class="rm-row"><div class="rm-week">0주차</div><div class="rm-desc">후보 16개 추리기</div></div>
+      <div class="rm-row"><div class="rm-week">1주차</div><div class="rm-desc">반려주식 월드컵 → 최종 1개 확정 &amp; 첫 매수</div></div>
+      <div class="rm-row"><div class="rm-week">2주차</div><div class="rm-desc">내 반려주식을 딱 3가지 숫자로 직접 검증하기</div></div>
+      <div class="rm-row"><div class="rm-week">3주차</div><div class="rm-desc">라이브 세션 — 서로의 반려주식 이야기</div></div>
+      <div class="rm-row"><div class="rm-week">4주차</div><div class="rm-desc">나의 언어로 정리하고, 이후의 리듬 만들기</div></div>
+      <div class="rm-quote">지금은 1주차 — 월드컵으로 나의 반려주식을 확정하는 단계입니다. 전원주 선생님이 SK하이닉스를 직원들의 눈빛으로 골랐듯, 결국 필요한 건 숫자보다 먼저 오는 자신만의 눈입니다.</div>
+    </div>
+
+    <div class="id-form">
+      <div class="field gi">
+        <label for="cohortInput">챌린지 기수</label>
+        <input id="cohortInput" type="number" inputmode="numeric" min="1" max="99" placeholder="1">
+        <span class="suffix">기</span>
+      </div>
+      <div class="field">
+        <label for="nameInput">이름 (닉네임)</label>
+        <input id="nameInput" type="text" maxlength="12" placeholder="예) 승호">
+      </div>
+    </div>
+    <button class="btn" id="introStart" disabled>월드컵 시작하기</button>
+  </section>
+
+  <!-- ① 예선: 종목 선택 -->
+  <section id="setup" class="hidden">
+    <div class="eyebrow">예선전</div>
+    <h1>16개 회사가<br>본선에 진출합니다</h1>
+    <div class="quali-head">
+      총 <b>16개</b>의 회사가 월드컵에 진출할 수 있습니다. 분야별 안배 정책에 따라 <b>Brain, Body, Integrator에서 각각 3개 이상</b>은 골라야 합니다. 『피지컬 AI 기술 혁명』의 관련주 리스트에서 <b>오래 함께하고 싶은 기업 16개</b>를 고르세요.
+    </div>
+
+    <div class="pillar brain">
+      <div class="pillar-head"><h2>두뇌</h2><span class="en">BRAIN</span></div>
+      <p class="pillar-desc">판단의 중심 — 반도체와 AI 소프트웨어</p>
+      <div class="chips" id="chipsBrain"></div>
+    </div>
+    <div class="pillar body">
+      <div class="pillar-head"><h2>몸</h2><span class="en">BODY</span></div>
+      <p class="pillar-desc">감각과 움직임 — 센서·액추에이터·배터리·소재</p>
+      <div class="chips" id="chipsBody"></div>
+    </div>
+    <div class="pillar integ">
+      <div class="pillar-head"><h2>통합자</h2><span class="en">INTEGRATOR</span></div>
+      <p class="pillar-desc">두뇌와 몸을 하나의 제품으로 — 완성체 기업</p>
+      <div class="chips" id="chipsInteg"></div>
+    </div>
+  </section>
+
+  <div class="dock hidden" id="dock">
+    <div class="dock-inner">
+      <div class="dock-pillars">
+        <span id="pcBrain">두뇌 0/3</span><span id="pcBody">몸 0/3</span><span id="pcInteg">통합자 0/3</span>
+      </div>
+      <div class="dock-row">
+        <div class="dock-count"><b id="selCount">0</b> / 16</div>
+        <button class="btn" id="startBtn" disabled>본선 16강 시작</button>
+      </div>
+      <div class="dock-links">
+        <button id="randomBtn">무작위 16개 뽑기</button>
+        <button id="clearBtn">선택 초기화</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 대결 -->
+  <section id="match" class="hidden">
+    <div class="match-head">
+      <div class="round-name" id="roundName"></div>
+      <div class="match-count" id="matchCount"></div>
+      <button class="restart-link" id="matchRestart" type="button">처음부터 다시 시작</button>
+    </div>
+    <div class="progress"><i id="progressBar" style="width:0%"></i></div>
+
+    <div class="reflect-box hidden" id="reflectBox">
+      <div class="rwho" id="reflectWho"></div>
+      <div class="rq" id="reflectQ"></div>
+      <div class="rsub hidden" id="reflectSub"></div>
+      <div class="rcrit"><span>선택 기준</span> <b id="reflectCrit"></b></div>
+    </div>
+
+    <div class="arena">
+      <button class="stock-card" id="cardA"><span class="name"></span><span class="meta"></span></button>
+      <div class="vs">VS</div>
+      <button class="stock-card" id="cardB"><span class="name"></span><span class="meta"></span></button>
+    </div>
+    <p class="arena-q" id="arenaQ"></p>
+
+    <div class="why hidden" id="whyBox">
+      <label>내가 선택한 <b id="whyWinner"></b></label>
+      <div class="wq" id="whyQ"></div>
+      <button class="prompt-btn hidden" id="whyPromptBtn" type="button">챗GPT 프롬프트 복사하기</button>
+      <textarea id="whyInput" maxlength="140" placeholder="나만의 언어로 적어보세요"></textarea>
+      <div class="hintline">짧아도 괜찮습니다. 나만의 언어로 남겨보세요.</div>
+      <button class="btn" id="whyNext" disabled>다음</button>
+      <button class="undo-link" id="whyUndo" type="button">다시 고르기</button>
+    </div>
+
+    <div class="why hidden" id="champBox">
+      <label>우승: <b id="champWinnerName"></b></label>
+      <div class="wq">내가 이 회사의 주인이 되기로 결심한, 단 하나의 이유는 무엇인가요?</div>
+      <textarea id="finalReasonInput" maxlength="140" placeholder="나만의 언어로 적어보세요"></textarea>
+      <div class="hintline">이 문장이 흔들리는 장에서 나를 붙잡아줍니다.</div>
+      <button class="btn" id="finalDone" disabled>결과 카드 만들기</button>
+      <button class="undo-link" id="finalUndo" type="button">다시 고르기</button>
+    </div>
+  </section>
+
+  <!-- ②-1 라운드 요약 -->
+  <section id="roundSum" class="hidden">
+    <div class="eyebrow">라운드 종료</div>
+    <div class="sum-card">
+      <div class="player-line" id="sumPlayer"></div>
+      <div class="sum-title" id="sumTitle"></div>
+      <div class="sum-sub" id="sumSub"></div>
+      <div class="sum-list" id="sumList"></div>
+      <div class="stamp" id="sumStamp"></div>
+    </div>
+    <p class="save-tip">이 화면을 <b>캡처해서 챌린지 방에 공유</b>해 주세요 📸</p>
+
+    <button class="btn" id="sumNext">다음</button>
+  </section>
+
+  <!-- ④ 결과 -->
+  <section id="result" class="hidden">
+    <div class="eyebrow">나의 반려주식</div>
+    <div class="result-card">
+      <div class="player-line" id="playerLine"></div>
+      <div class="medal">🏆</div>
+      <div class="champ-label">CHAMPION</div>
+      <div class="champ-name" id="champName"></div>
+      <div class="meta" id="champMeta"></div>
+      <div class="champ-reason" id="champReason"></div>
+      <div class="journey" id="journeyList"></div>
+      <div class="podium">
+        <div class="row"><span>준우승</span><b id="runnerUp"></b></div>
+        <div class="row"><span>4강</span><b id="semis"></b></div>
+      </div>
+      <div class="stamp" id="stamp"></div>
+    </div>
+    <p class="save-tip">이 화면을 <b>캡처해서 챌린지 방에 인증</b>해 주세요 📸</p>
+    <div class="actions">
+      <button class="btn" id="copyBtn">결과 텍스트 복사하기</button>
+      <button class="btn ghost" id="restartBtn">처음부터 다시 하기</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  // ▼ 데이터 자동 수집: 구글 Apps Script 웹 앱 URL을 따옴표 안에 붙여넣으세요. 비워두면 전송 없이 작동합니다.
+  var SUBMIT_URL = "";
+
+  // 『피지컬 AI 기술 혁명』 부록 — 모건스탠리 3기둥 분류 기반
+  var STOCKS = [
+    {n:"엔비디아",c:"미국",gs:["brain"]},{n:"마이크로소프트",c:"미국",gs:["brain"]},{n:"알파벳(구글)",c:"미국",gs:["brain"]},
+    {n:"메타",c:"미국",gs:["brain"]},{n:"바이두",c:"중국",gs:["brain"]},{n:"팔란티어",c:"미국",gs:["brain"]},
+    {n:"오라클",c:"미국",gs:["brain"]},{n:"헥사곤",c:"스웨덴",gs:["brain","body"]},{n:"지멘스",c:"독일",gs:["brain","body"]},
+    {n:"다쏘시스템",c:"프랑스",gs:["brain"]},{n:"인텔",c:"미국",gs:["brain","body"]},{n:"모빌아이",c:"이스라엘",gs:["brain"]},
+    {n:"암바렐라",c:"미국",gs:["brain"]},{n:"퀄컴",c:"미국",gs:["brain"]},{n:"호라이즌 로보틱스",c:"중국",gs:["brain"]},
+    {n:"삼성전자",c:"한국",gs:["brain","integ"]},{n:"SK하이닉스",c:"한국",gs:["brain"]},{n:"마이크론",c:"미국",gs:["brain"]},
+    {n:"Arm 홀딩스",c:"영국",gs:["brain"]},{n:"시놉시스",c:"미국",gs:["brain"]},{n:"케이던스",c:"미국",gs:["brain"]},
+    {n:"TSMC",c:"대만",gs:["brain"]},
+    {n:"텔레다인",c:"미국",gs:["body"]},{n:"소니",c:"일본",gs:["body","integ"]},{n:"옴니비전",c:"미국",gs:["body"]},
+    {n:"로보센스",c:"중국",gs:["body"]},{n:"온세미",c:"미국",gs:["body"]},{n:"TE 커넥티비티",c:"아일랜드",gs:["body"]},
+    {n:"키엔스",c:"일본",gs:["body"]},{n:"마그나",c:"캐나다",gs:["body"]},{n:"앱티브",c:"미국",gs:["body"]},
+    {n:"발레오",c:"프랑스",gs:["body"]},{n:"멜렉시스",c:"벨기에",gs:["body"]},{n:"알레그로",c:"미국",gs:["body"]},
+    {n:"노반타",c:"미국",gs:["body"]},{n:"센사타",c:"영국",gs:["body"]},{n:"켈리 센싱",c:"중국",gs:["body"]},
+    {n:"NSK",c:"일본",gs:["body"]},{n:"RBC 베어링스",c:"미국",gs:["body"]},{n:"팀켄",c:"미국",gs:["body"]},
+    {n:"쌍림그룹",c:"중국",gs:["body"]},{n:"베이테",c:"중국",gs:["body"]},{n:"리갈 렉스노드",c:"미국",gs:["body"]},
+    {n:"SKF",c:"스웨덴",gs:["body"]},{n:"헝리",c:"중국",gs:["body"]},{n:"THK",c:"일본",gs:["body"]},
+    {n:"하이윈",c:"대만",gs:["body"]},{n:"리더드라이브",c:"중국",gs:["body"]},{n:"나브테스코",c:"일본",gs:["body"]},
+    {n:"하모닉 드라이브",c:"일본",gs:["body"]},{n:"Hota",c:"대만",gs:["body"]},{n:"솽환",c:"중국",gs:["body"]},
+    {n:"중다 리더",c:"중국",gs:["body"]},{n:"이노밴스",c:"중국",gs:["body"]},{n:"니덱",c:"일본",gs:["body"]},
+    {n:"문스",c:"중국",gs:["body"]},{n:"리드샤인",c:"중국",gs:["body"]},{n:"자오웨이",c:"중국",gs:["body"]},
+    {n:"에스턴",c:"중국",gs:["body","integ"]},{n:"북방희토",c:"중국",gs:["body"]},{n:"MP 머티리얼즈",c:"미국",gs:["body"]},
+    {n:"라이너스",c:"호주",gs:["body"]},{n:"진리 마그네틱",c:"중국",gs:["body"]},{n:"EVE 에너지",c:"중국",gs:["body"]},
+    {n:"삼성SDI",c:"한국",gs:["body"]},{n:"LG에너지솔루션",c:"한국",gs:["body"]},{n:"CATL",c:"중국",gs:["body"]},
+    {n:"아날로그 디바이시스",c:"미국",gs:["body"]},{n:"인피니언",c:"독일",gs:["body"]},{n:"NXP",c:"네덜란드",gs:["body"]},
+    {n:"르네사스",c:"일본",gs:["body"]},{n:"ST마이크로",c:"스위스",gs:["body"]},{n:"텍사스 인스트루먼트",c:"미국",gs:["body"]},
+    {n:"쉬성그룹",c:"중국",gs:["body"]},{n:"암페놀",c:"미국",gs:["body"]},{n:"투오푸",c:"중국",gs:["body"]},
+    {n:"산화",c:"중국",gs:["body"]},{n:"허니웰",c:"미국",gs:["body"]},{n:"록웰",c:"미국",gs:["body"]},
+    {n:"폭스콘",c:"대만",gs:["body","integ"]},
+    {n:"테슬라",c:"미국",gs:["integ"]},{n:"BYD",c:"중국",gs:["integ"]},{n:"알리바바",c:"중국",gs:["integ"]},
+    {n:"아마존",c:"미국",gs:["integ"]},{n:"애플",c:"미국",gs:["integ"]},{n:"레인보우 로보틱스",c:"한국",gs:["integ"]},
+    {n:"유비테크",c:"중국",gs:["integ"]},{n:"현대차",c:"한국",gs:["integ"]},{n:"도요타",c:"일본",gs:["integ"]},
+    {n:"광저우자동차",c:"중국",gs:["integ"]},{n:"텐센트",c:"중국",gs:["integ"]},{n:"샤오미",c:"중국",gs:["integ"]},
+    {n:"ABB",c:"스위스",gs:["integ"]},{n:"테라다인",c:"미국",gs:["integ"]},{n:"마이디어",c:"중국",gs:["integ"]},
+    {n:"네이버",c:"한국",gs:["integ"]},{n:"샤오펑",c:"중국",gs:["integ"]}
+  ];
+  var PILLAR_KO={brain:"두뇌 Brain",body:"몸 Body",integ:"통합자 Integrator"};
+  var PILLAR_SHORT={brain:"두뇌",body:"몸",integ:"통합자"};
+  var MIN_PER_PILLAR=3;
+
+  // 라운드별 질문 — 대가의 이름, 질문, 선택 기준을 함께 노출
+  var REFLECT = {
+    16:{who:"Peter Lynch", q:"이 회사는 무엇으로 돈을 버는가?", crit:"내가 더 잘 이해하는 사업 · 회사를 선택"},
+    8:{who:"Warren Buffett", q:"10년 후, 지금보다 더 강한 자리에 있을까?", crit:"내가 더 잘될 거라고 믿는 회사를 선택"},
+    4:{who:"Charlie Munger", q:"내가 가장 아끼는 사람에게 물려주거나 자랑해도 떳떳한 회사인가?", sub:"(자녀, 배우자, 친구, 후배 등)", crit:"더 자랑스러운 기업을 선택"}
+  };
+  var FINAL_Q = {who:"John Lee", q:"나는 이 기업의 주인이 되고 싶은가?", crit:"나의 직감, 나만의 이유"};
+  var ROUND_CATEGORY = {"16강":"현재 사업","8강":"미래 비전","4강":"자랑스러운 이유","결승":"나만의 이유"};
+  // 선택 직후 라운드별 답변 질문 (16강·8강은 챗GPT 프롬프트 제공, 4강은 직접 서술)
+  var ANSWER_Q = {
+    16:{q:"내가 선택한 기업은 무엇을 하는 회사인가요?",
+        prompt:"다음 기업이 어떤 사업으로 매출을 만드는지 알려줘. 매출 구성(사업부문별 비중)을 중심으로, 어디서 얼마나 벌고 있는지 초보자도 이해할 수 있게 쉽게 설명해줘.\n\n기업: {W}"},
+    8:{q:"내가 선택한 기업은 10년 후 어떤 회사가 되고 싶어 하나요?",
+       prompt:"다음 기업이 밝힌 중장기 비전과 미래 사업 방향을 알려줘. 이 회사가 앞으로 어떤 모습을 지향하는지, 지금 어디에 힘을 쏟고 있는지 알려줘.\n\n기업: {W}"},
+    4:{q:"내가 선택한 기업이 더 자랑스럽다고 느껴지는 이유는 무엇인가요?", prompt:null}
+  };
+  // 궁금한 사람을 위한 선택적 확인 프롬프트(강제 아님)
+
+  var $=function(id){return document.getElementById(id)};
+  var intro=$("intro"),setup=$("setup"),dock=$("dock"),match=$("match"),
+      roundSum=$("roundSum"),result=$("result");
+  var player={cohort:"",name:""};
+  var selected=[];
+  var originalSelectionNames=[];
+  var matchLog=[];
+  var resultText="";
+
+  $("companyCount").textContent=STOCKS.length;
+
+  function todayStr(){var d=new Date();return d.getFullYear()+"."+(d.getMonth()+1)+"."+d.getDate()}
+  function playerStr(){return "피지컬 AI 챌린지 "+player.cohort+"기 · "+player.name}
+
+  function copyText(text,btn,doneMsg){
+    var original=btn.textContent;
+    function done(){btn.textContent=doneMsg||"복사 완료!";setTimeout(function(){btn.textContent=original},2400)}
+    function fallback(){
+      var ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();
+      try{document.execCommand("copy");done()}catch(e){}
+      document.body.removeChild(ta);
+    }
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,fallback)}
+    else fallback();
+  }
+
+  // ---- 인트로 (1주차) ----
+  function checkIntro(){
+    $("introStart").disabled=!($("cohortInput").value.trim()&&$("nameInput").value.trim());
+  }
+  $("cohortInput").addEventListener("input",checkIntro);
+  $("nameInput").addEventListener("input",checkIntro);
+  $("introStart").addEventListener("click",function(){
+    player.cohort=$("cohortInput").value.trim();
+    player.name=$("nameInput").value.trim();
+    intro.classList.add("hidden");
+    setup.classList.remove("hidden");
+    dock.classList.remove("hidden");
+    $("wrapEl").classList.add("pad-dock");
+    window.scrollTo(0,0);
+  });
+
+  // ---- 예선 칩 ----
+  var wraps={brain:$("chipsBrain"),body:$("chipsBody"),integ:$("chipsInteg")};
+  STOCKS.forEach(function(s,idx){
+    var b=document.createElement("button");
+    b.className="chip";b.type="button";
+    var html='<span>'+s.n+'</span><span class="cc">'+s.c+'</span>';
+    if(s.gs.length>1){for(var k=1;k<s.gs.length;k++) html+='<span class="xtra">+'+PILLAR_SHORT[s.gs[k]]+'</span>'}
+    b.innerHTML=html;
+    b.setAttribute("aria-pressed","false");
+    b.addEventListener("click",function(){toggle(idx,b)});
+    s.el=b; wraps[s.gs[0]].appendChild(b);
+  });
+  function pillarCount(g){var n=0;selected.forEach(function(i){if(STOCKS[i].gs.indexOf(g)>=0)n++});return n}
+  function toggle(idx,el){
+    var pos=selected.indexOf(idx);
+    if(pos>=0){selected.splice(pos,1);el.classList.remove("on");el.setAttribute("aria-pressed","false")}
+    else{if(selected.length>=16)return;selected.push(idx);el.classList.add("on");el.setAttribute("aria-pressed","true")}
+    refresh();
+  }
+  function refresh(){
+    var cb=pillarCount("brain"),cbo=pillarCount("body"),ci=pillarCount("integ");
+    $("selCount").textContent=selected.length;
+    $("pcBrain").textContent="두뇌 "+cb+"/3";$("pcBrain").className=cb>=MIN_PER_PILLAR?"ok":"no";
+    $("pcBody").textContent="몸 "+cbo+"/3";$("pcBody").className=cbo>=MIN_PER_PILLAR?"ok":"no";
+    $("pcInteg").textContent="통합자 "+ci+"/3";$("pcInteg").className=ci>=MIN_PER_PILLAR?"ok":"no";
+    $("startBtn").disabled=!(selected.length===16&&cb>=MIN_PER_PILLAR&&cbo>=MIN_PER_PILLAR&&ci>=MIN_PER_PILLAR);
+    var full=selected.length>=16;
+    STOCKS.forEach(function(s,idx){s.el.disabled=full&&selected.indexOf(idx)<0});
+  }
+  $("clearBtn").addEventListener("click",function(){
+    selected=[];STOCKS.forEach(function(s){s.el.classList.remove("on");s.el.setAttribute("aria-pressed","false")});refresh();
+  });
+  $("randomBtn").addEventListener("click",function(){
+    selected=[];STOCKS.forEach(function(s){s.el.classList.remove("on")});
+    var byG={brain:[],body:[],integ:[]};
+    STOCKS.forEach(function(s,i){byG[s.gs[0]].push(i)});
+    shuffle(byG.brain);shuffle(byG.body);shuffle(byG.integ);
+    selected=byG.brain.slice(0,3).concat(byG.body.slice(0,3),byG.integ.slice(0,3));
+    var rest=byG.brain.slice(3).concat(byG.body.slice(3),byG.integ.slice(3));
+    shuffle(rest);selected=selected.concat(rest.slice(0,7));
+    selected.forEach(function(i){STOCKS[i].el.classList.add("on")});
+    refresh();
+  });
+
+  // ---- 토너먼트 상태 ----
+  var pool=[],nextPool=[],roundSize=16,matchIndex=0,totalMatches=15,doneMatches=0;
+  var semiLosers=[],finalLoser=null,champion=null;
+  var ROUND_LABEL={16:"16강",8:"8강",4:"4강",2:"결승"};
+  function shuffle(arr){for(var i=arr.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=arr[i];arr[i]=arr[j];arr[j]=t}return arr}
+
+  $("startBtn").addEventListener("click",function(){
+    originalSelectionNames=selected.map(function(i){return STOCKS[i].n});
+    pool=shuffle(selected.map(function(i){return STOCKS[i]}));
+    nextPool=[];roundSize=16;matchIndex=0;doneMatches=0;
+    semiLosers=[];finalLoser=null;matchLog=[];
+    setup.classList.add("hidden");dock.classList.add("hidden");
+    $("wrapEl").classList.remove("pad-dock");
+    match.classList.remove("hidden");
+    window.scrollTo(0,0);
+    renderMatch();
+  });
+
+  function metaHTML(s){
+    var h="";
+    s.gs.forEach(function(g){h+='<span class="tag '+g+'">'+PILLAR_KO[g]+'</span>'});
+    h+='<span class="tag nation">'+s.c+'</span>';
+    return h;
+  }
+  function setCard(card,s){
+    card.querySelector(".name").textContent=s.n;
+    card.querySelector(".meta").innerHTML=metaHTML(s);
+  }
+  function renderMatch(){
+    var a=pool[matchIndex*2],b=pool[matchIndex*2+1];
+    $("roundName").innerHTML=roundSize===2?"<em>결승</em>":ROUND_LABEL[roundSize];
+    $("matchCount").textContent=(matchIndex+1)+" / "+(roundSize/2)+" 경기";
+    setCard($("cardA"),a); setCard($("cardB"),b);
+    $("cardA").classList.remove("win","lose"); $("cardB").classList.remove("win","lose");
+    $("cardA").disabled=false; $("cardB").disabled=false;
+    $("whyBox").classList.add("hidden");$("champBox").classList.add("hidden");
+    $("whyInput").value="";$("whyNext").disabled=true;
+
+    var rf = roundSize===2 ? FINAL_Q : REFLECT[roundSize];
+    if(rf){
+      $("reflectBox").classList.remove("hidden");
+      $("reflectWho").textContent=rf.who+"의 질문";
+      $("reflectQ").textContent=rf.q;
+      if(rf.sub){$("reflectSub").textContent=rf.sub;$("reflectSub").classList.remove("hidden")}
+      else{$("reflectSub").classList.add("hidden")}
+      $("reflectCrit").textContent=rf.crit;
+      $("arenaQ").innerHTML=(roundSize===2)
+        ? "지금 사고 싶은 쪽이 아니라, <b>오래 주인으로 남고 싶은 쪽</b>을 고르세요"
+        : "<b>"+rf.crit+"</b>";
+    }
+
+    $("cardA").style.animation="none";$("cardB").style.animation="none";
+    void $("cardA").offsetWidth;
+    $("cardA").style.animation="";$("cardB").style.animation="";
+    $("progressBar").style.width=Math.round(doneMatches/totalMatches*100)+"%";
+  }
+
+  var pendingWinner=null,pendingLoser=null;
+  function pick(wIdx){
+    if(pendingWinner)return;
+    var a=pool[matchIndex*2],b=pool[matchIndex*2+1];
+    pendingWinner=wIdx===0?a:b; pendingLoser=wIdx===0?b:a;
+    (wIdx===0?$("cardA"):$("cardB")).classList.add("win");
+    (wIdx===0?$("cardB"):$("cardA")).classList.add("lose");
+    $("cardA").disabled=true;$("cardB").disabled=true;
+
+    if(roundSize===2){
+      $("champWinnerName").textContent=pendingWinner.n;
+      $("champBox").classList.remove("hidden");
+      $("finalReasonInput").focus();
+      return;
+    }
+    var aq=ANSWER_Q[roundSize];
+    $("whyWinner").textContent=pendingWinner.n;
+    $("whyQ").textContent=aq.q;
+    if(aq.prompt){
+      var filledPrompt=aq.prompt.split("{W}").join(pendingWinner.n);
+      $("whyPromptBtn").classList.remove("hidden");
+      $("whyPromptBtn").onclick=function(){copyText(filledPrompt,$("whyPromptBtn"),"복사 완료! 챗GPT에 붙여넣어 확인하세요")};
+    }else{
+      $("whyPromptBtn").classList.add("hidden");
+    }
+    $("whyBox").classList.remove("hidden");
+    $("whyInput").focus();
+  }
+  $("cardA").addEventListener("click",function(){pick(0)});
+  $("cardB").addEventListener("click",function(){pick(1)});
+
+  $("whyInput").addEventListener("input",function(){$("whyNext").disabled=($("whyInput").value.trim().length===0)});
+  $("whyNext").addEventListener("click",function(){finishMatch($("whyInput").value.trim())});
+  $("finalReasonInput").addEventListener("input",function(){$("finalDone").disabled=($("finalReasonInput").value.trim().length===0)});
+  $("finalDone").addEventListener("click",function(){finishMatch($("finalReasonInput").value.trim())});
+
+  function undoPick(){
+    pendingWinner=null;pendingLoser=null;
+    $("whyBox").classList.add("hidden");$("champBox").classList.add("hidden");
+    $("whyInput").value="";$("whyNext").disabled=true;
+    $("finalReasonInput").value="";$("finalDone").disabled=true;
+    $("cardA").classList.remove("win","lose");$("cardB").classList.remove("win","lose");
+    $("cardA").disabled=false;$("cardB").disabled=false;
+  }
+  $("whyUndo").addEventListener("click",undoPick);
+  $("finalUndo").addEventListener("click",undoPick);
+
+  $("matchRestart").addEventListener("click",function(){
+    if(!confirm("정말 처음부터 다시 시작할까요? 지금까지의 선택은 사라집니다.")) return;
+    match.classList.add("hidden");
+    intro.classList.remove("hidden");
+    selected=[];
+    STOCKS.forEach(function(s){s.el.classList.remove("on");s.el.disabled=false;s.el.setAttribute("aria-pressed","false")});
+    refresh();
+    window.scrollTo(0,0);
+  });
+
+  function finishMatch(reason){
+    var curRound=ROUND_LABEL[roundSize];
+    matchLog.push({round:curRound,a:pool[matchIndex*2],b:pool[matchIndex*2+1],
+      winner:pendingWinner,loser:pendingLoser,reason:reason});
+    if(roundSize===4)semiLosers.push(pendingLoser);
+    if(roundSize===2)finalLoser=pendingLoser;
+    nextPool.push(pendingWinner);doneMatches++;
+    var w=pendingWinner;
+    pendingWinner=null;pendingLoser=null;
+    matchIndex++;
+    if(matchIndex>=roundSize/2){
+      pool=nextPool;nextPool=[];
+      var finishedSize=roundSize;
+      roundSize=roundSize/2;matchIndex=0;
+      if(roundSize===1){champion=w;showResult(reason);return}
+      showRoundSummary(curRound,finishedSize);
+      return;
+    }
+    renderMatch();
+  }
+
+  // ---- 라운드 요약 / 주차 경계 ----
+  function showRoundSummary(roundLabel,finishedSize){
+    match.classList.add("hidden");
+    roundSum.classList.remove("hidden");
+    $("sumPlayer").textContent=playerStr();
+    $("sumTitle").innerHTML="<em>"+roundLabel+"</em> 결과";
+    $("sumSub").textContent="진출 "+(finishedSize/2)+"개 회사 · 나의 선택과 이유";
+    var list=$("sumList");list.innerHTML="";
+    matchLog.forEach(function(m){
+      if(m.round!==roundLabel)return;
+      var item=document.createElement("div");item.className="sum-item";
+      var line=document.createElement("div");line.className="line";
+      line.innerHTML='<span class="w">'+m.winner.n+'</span><span class="l">'+m.loser.n+'</span>';
+      item.appendChild(line);
+      if(m.reason){var r=document.createElement("div");r.className="r";r.textContent=m.reason;item.appendChild(r)}
+      list.appendChild(item);
+    });
+    $("sumStamp").textContent="피지컬 AI 반려주식 월드컵 · "+todayStr();
+
+    var NEXT_TEXT={8:"8강 시작하기",4:"4강 시작하기",2:"결승 시작하기"};
+    $("sumNext").textContent=NEXT_TEXT[roundSize]||"다음";
+    $("sumNext").onclick=function(){
+      roundSum.classList.add("hidden");
+      match.classList.remove("hidden");
+      window.scrollTo(0,0);
+      renderMatch();
+    };
+    window.scrollTo(0,0);
+  }
+
+  // ---- 결과 ----
+  function champJourney(){return matchLog.filter(function(m){return m.winner===champion})}
+  function showResult(reason){
+    match.classList.add("hidden");
+    result.classList.remove("hidden");
+    $("playerLine").textContent=playerStr();
+    $("champName").textContent=champion.n;
+    $("champMeta").innerHTML=metaHTML(champion);
+    $("champReason").textContent=reason;
+    $("runnerUp").textContent=finalLoser?finalLoser.n:"";
+    $("semis").textContent=semiLosers.map(function(s){return s.n}).join(" · ");
+
+    var jl=$("journeyList");
+    jl.innerHTML='<h4>우승까지의 여정</h4>';
+    champJourney().forEach(function(m){
+      var d=document.createElement("div");d.className="j-row";
+      var cat=ROUND_CATEGORY[m.round]||"";
+      var head=document.createElement("span");
+      head.innerHTML='<span class="jr">'+m.round+'</span> <span class="jo">('+cat+')</span> ';
+      d.appendChild(head);
+      d.appendChild(document.createTextNode(m.reason||""));
+      jl.appendChild(d);
+    });
+    $("stamp").textContent="피지컬 AI 반려주식 월드컵 · "+todayStr();
+
+    resultText="\ud83c\udfc6 피지컬 AI 반려주식 월드컵\n"+playerStr()+" · "+todayStr()
+      +"\n\n우승: "+champion.n+" ("+champion.gs.map(function(g){return PILLAR_KO[g]}).join(", ")+" · "+champion.c+")"
+      +"\n\u201c"+reason+"\u201d\n\n[우승까지의 여정]";
+    champJourney().forEach(function(m){var cat=ROUND_CATEGORY[m.round]||"";resultText+="\n"+m.round+" ("+cat+") "+(m.reason||"")});
+    resultText+="\n\n준우승: "+(finalLoser?finalLoser.n:"")+"\n4강: "+semiLosers.map(function(s){return s.n}).join(", ");
+
+    submitData(reason);
+    window.scrollTo(0,0);
+  }
+
+  function submitData(finalReason){
+    if(!SUBMIT_URL) return;
+    try{
+      var payload={
+        date:new Date().toISOString(), cohort:player.cohort, name:player.name,
+        champion:champion.n, championPillar:champion.gs.map(function(g){return PILLAR_SHORT[g]}).join("+"),
+        championNation:champion.c, finalReason:finalReason,
+        runnerUp:finalLoser?finalLoser.n:"", semiFinal:semiLosers.map(function(s){return s.n}).join(", "),
+        selected16:originalSelectionNames.join(", "),
+        journey:champJourney().map(function(m){var cat=ROUND_CATEGORY[m.round]||"";return m.round+" ("+cat+") "+(m.reason||"")}).join(" | "),
+        allMatches:matchLog.map(function(m){return {round:m.round,winner:m.winner.n,loser:m.loser.n,reason:m.reason||""}})
+      };
+      fetch(SUBMIT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify(payload)}).catch(function(){});
+    }catch(e){}
+  }
+
+  $("copyBtn").addEventListener("click",function(){copyText(resultText,$("copyBtn"),"복사 완료! 챌린지 방에 붙여넣으세요")});
+
+  $("restartBtn").addEventListener("click",function(){
+    result.classList.add("hidden");
+    intro.classList.remove("hidden");
+    selected=[];
+    STOCKS.forEach(function(s){s.el.classList.remove("on");s.el.disabled=false;s.el.setAttribute("aria-pressed","false")});
+    refresh();
+    history.replaceState(null,"",location.pathname);
+    window.scrollTo(0,0);
+  });
+
+  refresh();
+})();
+</script>
+</body>
+</html>
