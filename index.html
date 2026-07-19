@@ -235,6 +235,43 @@
       </div>
     </div>
     <button class="btn" id="introStart" disabled>월드컵 시작하기</button>
+    <button class="btn ghost" id="lookupOpenBtn" type="button" style="margin-top:10px">지난 기록 조회하기</button>
+  </section>
+
+  <!-- 지난 기록 조회 -->
+  <section id="lookup" class="hidden">
+    <div class="eyebrow">지난 기록</div>
+    <h1>나의 반려주식<br>기록을 조회합니다</h1>
+    <div class="id-form">
+      <div class="field gi">
+        <label for="lookupCohort">챌린지 기수</label>
+        <input id="lookupCohort" type="number" inputmode="numeric" min="1" max="99" placeholder="1">
+        <span class="suffix">기</span>
+      </div>
+      <div class="field">
+        <label for="lookupName">이름 (닉네임)</label>
+        <input id="lookupName" type="text" maxlength="12" placeholder="예) 승호">
+      </div>
+    </div>
+    <button class="btn" id="lookupSearchBtn">조회하기</button>
+    <button class="btn ghost" id="lookupBackBtn" type="button" style="margin-top:10px">처음으로</button>
+
+    <div id="lookupStatus" class="sub" style="margin-top:14px"></div>
+
+    <div id="lookupResultBox" class="result-card hidden" style="margin-top:18px">
+      <div class="player-line" id="lkPlayerLine"></div>
+      <div class="medal">🏆</div>
+      <div class="champ-label">CHAMPION</div>
+      <div class="champ-name" id="lkChampName"></div>
+      <div class="meta" id="lkChampMeta"></div>
+      <div class="champ-reason" id="lkChampReason"></div>
+      <div class="podium">
+        <div class="row"><span>준우승</span><b id="lkRunnerUp"></b></div>
+        <div class="row"><span>4강</span><b id="lkSemis"></b></div>
+      </div>
+    </div>
+
+    <div id="lkAllMatches"></div>
   </section>
 
   <!-- ① 예선: 종목 선택 -->
@@ -365,7 +402,7 @@
 <script>
 (function(){
   // ▼ 데이터 자동 수집: 구글 Apps Script 웹 앱 URL을 따옴표 안에 붙여넣으세요. 비워두면 전송 없이 작동합니다.
-  var SUBMIT_URL = "";
+  var SUBMIT_URL = "https://script.google.com/macros/s/AKfycbxHWcGvzFctXbbGu-L_aQTeBK5TGudxpRNZyRceFqjRmkhGjkN1fYkZ_LSwR7gxMntJ/exec";
 
   // 『피지컬 AI 기술 혁명』 부록 — 모건스탠리 3기둥 분류 기반
   var STOCKS = [
@@ -428,7 +465,7 @@
 
   var $=function(id){return document.getElementById(id)};
   var intro=$("intro"),setup=$("setup"),dock=$("dock"),match=$("match"),
-      roundSum=$("roundSum"),result=$("result");
+      roundSum=$("roundSum"),result=$("result"),lookup=$("lookup");
   var player={cohort:"",name:""};
   var selected=[];
   var originalSelectionNames=[];
@@ -738,6 +775,79 @@
     refresh();
     history.replaceState(null,"",location.pathname);
     window.scrollTo(0,0);
+  });
+
+  // ---- 지난 기록 조회 ----
+  $("lookupOpenBtn").addEventListener("click",function(){
+    intro.classList.add("hidden");
+    lookup.classList.remove("hidden");
+    $("lookupStatus").textContent="";
+    $("lookupResultBox").classList.add("hidden");
+    $("lkAllMatches").innerHTML="";
+    window.scrollTo(0,0);
+  });
+
+  $("lookupBackBtn").addEventListener("click",function(){
+    lookup.classList.add("hidden");
+    intro.classList.remove("hidden");
+    window.scrollTo(0,0);
+  });
+
+  $("lookupSearchBtn").addEventListener("click",function(){
+    var cohort=$("lookupCohort").value.trim();
+    var name=$("lookupName").value.trim();
+    if(!cohort||!name){
+      $("lookupStatus").textContent="기수와 이름을 모두 입력해주세요.";
+      return;
+    }
+    if(!SUBMIT_URL){
+      $("lookupStatus").textContent="조회 기능이 아직 연결되지 않았습니다.";
+      return;
+    }
+    $("lookupStatus").textContent="조회 중...";
+    $("lookupResultBox").classList.add("hidden");
+    $("lkAllMatches").innerHTML="";
+
+    var url=SUBMIT_URL+"?cohort="+encodeURIComponent(cohort)+"&name="+encodeURIComponent(name);
+    fetch(url).then(function(r){return r.json()}).then(function(data){
+      if(data.status!=="ok"){
+        $("lookupStatus").textContent="기록을 찾을 수 없습니다. 기수와 이름을 다시 확인해주세요.";
+        return;
+      }
+      $("lookupStatus").textContent="";
+      var s=data.summary;
+      $("lkPlayerLine").textContent=s["기수"]+"기 · "+s["이름"];
+      $("lkChampName").textContent=s["우승기업"];
+      $("lkChampMeta").textContent=(s["우승분야"]||"")+(s["우승국가"]?" · "+s["우승국가"]:"");
+      $("lkChampReason").textContent=s["우승이유"];
+      $("lkRunnerUp").textContent=s["준우승"]||"";
+      $("lkSemis").textContent=s["4강탈락"]||"";
+      $("lookupResultBox").classList.remove("hidden");
+
+      var order={"16강":0,"8강":1,"4강":2,"결승":3};
+      var matches=(data.matches||[]).slice().sort(function(a,b){return order[a["라운드"]]-order[b["라운드"]]});
+      var box=$("lkAllMatches");
+      var curRound=null;
+      matches.forEach(function(m){
+        if(m["라운드"]!==curRound){
+          curRound=m["라운드"];
+          var h=document.createElement("h4");
+          h.style.marginTop="18px";h.style.fontSize="12px";h.style.letterSpacing=".14em";
+          h.style.color="var(--ink-soft)";h.style.fontWeight="800";
+          h.textContent=curRound;
+          box.appendChild(h);
+        }
+        var item=document.createElement("div");item.className="sum-item";
+        var line=document.createElement("div");line.className="line";
+        line.innerHTML='<span class="w">'+m["승리기업"]+'</span><span class="l">'+m["패배기업"]+'</span>';
+        item.appendChild(line);
+        if(m["선택이유"]){var r=document.createElement("div");r.className="r";r.textContent=m["선택이유"];item.appendChild(r)}
+        box.appendChild(item);
+      });
+      window.scrollTo(0,0);
+    }).catch(function(){
+      $("lookupStatus").textContent="조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+    });
   });
 
   refresh();
