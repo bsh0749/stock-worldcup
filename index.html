@@ -235,6 +235,7 @@
       </div>
     </div>
     <button class="btn" id="introStart" disabled>월드컵 시작하기</button>
+    <button class="btn ghost hidden" id="resumeBtn" type="button" style="margin-top:10px">이어서 하기</button>
     <button class="btn ghost" id="lookupOpenBtn" type="button" style="margin-top:10px">지난 기록 조회하기</button>
   </section>
 
@@ -492,6 +493,7 @@
   // ---- 인트로 (1주차) ----
   function checkIntro(){
     $("introStart").disabled=!($("cohortInput").value.trim()&&$("nameInput").value.trim());
+    checkResumeAvailable();
   }
   $("cohortInput").addEventListener("input",checkIntro);
   $("nameInput").addEventListener("input",checkIntro);
@@ -503,6 +505,82 @@
     dock.classList.remove("hidden");
     $("wrapEl").classList.add("pad-dock");
     window.scrollTo(0,0);
+  });
+
+  // ---- 진행 상황 저장 / 이어하기 ----
+  function stockIndex(s){return s?STOCKS.indexOf(s):-1}
+  function progressKey(cohort,name){return "wc_progress_"+cohort+"_"+name}
+  function saveProgress(stage){
+    if(!player.cohort||!player.name) return;
+    try{
+      var data={
+        stage:stage, cohort:player.cohort, name:player.name,
+        selected:selected.slice(),
+        originalSelectionNames:originalSelectionNames.slice(),
+        pool:pool.map(stockIndex), nextPool:nextPool.map(stockIndex),
+        roundSize:roundSize, matchIndex:matchIndex, doneMatches:doneMatches,
+        semiLosers:semiLosers.map(stockIndex),
+        finalLoser:finalLoser?stockIndex(finalLoser):null,
+        matchLog:matchLog.map(function(m){return {round:m.round,a:stockIndex(m.a),b:stockIndex(m.b),
+          winner:stockIndex(m.winner),loser:stockIndex(m.loser),reason:m.reason}})
+      };
+      localStorage.setItem(progressKey(player.cohort,player.name),JSON.stringify(data));
+    }catch(e){}
+  }
+  function loadProgress(cohort,name){
+    try{
+      var raw=localStorage.getItem(progressKey(cohort,name));
+      return raw?JSON.parse(raw):null;
+    }catch(e){return null}
+  }
+  function clearProgress(cohort,name){
+    try{localStorage.removeItem(progressKey(cohort,name))}catch(e){}
+  }
+  function checkResumeAvailable(){
+    var cohort=$("cohortInput").value.trim();
+    var name=$("nameInput").value.trim();
+    var saved=(cohort&&name)?loadProgress(cohort,name):null;
+    $("resumeBtn").classList.toggle("hidden",!saved);
+  }
+  $("resumeBtn").addEventListener("click",function(){
+    var cohort=$("cohortInput").value.trim();
+    var name=$("nameInput").value.trim();
+    var saved=loadProgress(cohort,name);
+    if(!saved) return;
+    player.cohort=saved.cohort; player.name=saved.name;
+    selected=saved.selected.slice();
+    originalSelectionNames=(saved.originalSelectionNames||[]).slice();
+
+    if(saved.stage==="setup"){
+      STOCKS.forEach(function(s,idx){
+        var on=selected.indexOf(idx)>=0;
+        s.el.classList.toggle("on",on);
+        s.el.setAttribute("aria-pressed",on?"true":"false");
+      });
+      intro.classList.add("hidden");
+      setup.classList.remove("hidden");
+      dock.classList.remove("hidden");
+      $("wrapEl").classList.add("pad-dock");
+      refresh();
+      window.scrollTo(0,0);
+      return;
+    }
+
+    // stage === "match"
+    pool=(saved.pool||[]).map(function(i){return STOCKS[i]});
+    nextPool=(saved.nextPool||[]).map(function(i){return STOCKS[i]});
+    roundSize=saved.roundSize; matchIndex=saved.matchIndex; doneMatches=saved.doneMatches;
+    semiLosers=(saved.semiLosers||[]).map(function(i){return STOCKS[i]});
+    finalLoser=(saved.finalLoser!=null&&saved.finalLoser>=0)?STOCKS[saved.finalLoser]:null;
+    matchLog=(saved.matchLog||[]).map(function(m){return {round:m.round,a:STOCKS[m.a],b:STOCKS[m.b],
+      winner:STOCKS[m.winner],loser:STOCKS[m.loser],reason:m.reason}});
+
+    intro.classList.add("hidden");
+    setup.classList.add("hidden"); dock.classList.add("hidden");
+    $("wrapEl").classList.remove("pad-dock");
+    match.classList.remove("hidden");
+    window.scrollTo(0,0);
+    renderMatch();
   });
 
   // ---- 예선 칩 ----
@@ -533,6 +611,7 @@
     $("startBtn").disabled=!(selected.length===16&&cb>=MIN_PER_PILLAR&&cbo>=MIN_PER_PILLAR&&ci>=MIN_PER_PILLAR);
     var full=selected.length>=16;
     STOCKS.forEach(function(s,idx){s.el.disabled=full&&selected.indexOf(idx)<0});
+    saveProgress("setup");
   }
   $("clearBtn").addEventListener("click",function(){
     selected=[];STOCKS.forEach(function(s){s.el.classList.remove("on");s.el.setAttribute("aria-pressed","false")});refresh();
@@ -578,6 +657,7 @@
     card.querySelector(".meta").innerHTML=metaHTML(s);
   }
   function renderMatch(){
+    saveProgress("match");
     var a=pool[matchIndex*2],b=pool[matchIndex*2+1];
     $("roundName").innerHTML=roundSize===2?"<em>결승</em>":ROUND_LABEL[roundSize];
     $("matchCount").textContent=(matchIndex+1)+" / "+(roundSize/2)+" 경기";
@@ -655,6 +735,7 @@
 
   $("matchRestart").addEventListener("click",function(){
     if(!confirm("정말 처음부터 다시 시작할까요? 지금까지의 선택은 사라집니다.")) return;
+    clearProgress(player.cohort,player.name);
     match.classList.add("hidden");
     intro.classList.remove("hidden");
     selected=[];
@@ -686,6 +767,7 @@
 
   // ---- 라운드 요약 / 주차 경계 ----
   function showRoundSummary(roundLabel,finishedSize){
+    saveProgress("match");
     match.classList.add("hidden");
     roundSum.classList.remove("hidden");
     $("sumPlayer").textContent=playerStr();
@@ -717,6 +799,7 @@
   // ---- 결과 ----
   function champJourney(){return matchLog.filter(function(m){return m.winner===champion})}
   function showResult(reason){
+    clearProgress(player.cohort,player.name);
     match.classList.add("hidden");
     result.classList.remove("hidden");
     $("playerLine").textContent=playerStr();
